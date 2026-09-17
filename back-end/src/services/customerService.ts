@@ -1,59 +1,53 @@
+import { prisma } from "../database/client";
 
-import * as repository from "../repositories/customerRepository.ts";
+import type { Customer } from "../../generated/prisma/client";
+import type { CreateCustomerDto } from "../dto/customer/createCustomerDto";
+import type { UpdateCustomerDto } from "../dto/customer/updateCustomerDto";
 
-
-import type { Customer } from "../generated/prisma/client.ts";
-import type { CreateCustomerDto } from "../dto/customer/createCustomerDto.ts";
-import type { UpdateCustomerDto } from "../dto/customer/updateCustomerDto.ts";
-
-
-import { NotFoundError } from "../errors/NotFoundError.ts";
-
+import { NotFoundError } from "../errors/NotFoundError";
 
 export async function findAll(): Promise<Customer[]> {
- return repository.findAll();
+  return prisma.customer.findMany({
+    orderBy: {
+      name: "asc",
+    },
+  });
 }
 
+export async function findById(id: number): Promise<Customer> {
+  const customer = await prisma.customer.findUnique({
+    where: { id },
+  });
 
-export async function findById(
- id: number
-): Promise<Customer> {
- const customer = await repository.findById(id);
+  if (!customer) {
+    throw new NotFoundError("Customer não encontrado.");
+  }
 
-
- if (!customer) {
-   throw new NotFoundError("Customer não encontrado.");
- }
-
-
- return customer;
+  return customer;
 }
 
-
-export async function create(
- data: CreateCustomerDto
-): Promise<Customer> {
- return repository.create(data);
+export async function create(data: CreateCustomerDto): Promise<Customer> {
+  return prisma.customer.create({
+    data,
+  });
 }
-
 
 export async function update(
- id: number,
- data: UpdateCustomerDto
+  id: number,
+  data: UpdateCustomerDto,
 ): Promise<Customer> {
- await findById(id);
+  await findById(id);
 
-
- return repository.update(id, data);
+  return prisma.customer.update({
+    where: { id },
+    data,
+  });
 }
 
+export async function remove(id: number): Promise<Customer> {
+  await findById(id);
 
-export async function remove(
- id: number
-): Promise<Customer> {
- await findById(id);
-
-
- return repository.remove(id);
+  return prisma.customer.delete({
+    where: { id },
+  });
 }
-
